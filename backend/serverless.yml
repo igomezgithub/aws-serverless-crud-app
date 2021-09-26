@@ -1,5 +1,5 @@
 # TODO: Change the name of the org 
-org: igomez
+# org: ivangomrod@gmail.com
 app: serverless-todo-app
 service: serverless-todo-app
 
@@ -149,6 +149,13 @@ resources:
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
     
     # TODO: Create a DynamoDB table with local secondary index and a composite key
     TodosDynamoDBTable:
@@ -166,15 +173,15 @@ resources:
 
     # TODO: Complete the bucket properties below. 
     # Do not forget to add the CorsConfiguration propoerty
-    AttachmentsBucket:
-      Type: AWS::S3::Bucket
-      Properties:
+    # AttachmentsBucket:
+    #  Type: AWS::S3::Bucket
+    #  Properties:
 
     # TODO: Complete the policy below and attach it to the bucket defined above
     # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"
-    BucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
+    # BucketPolicy:
+    #  Type: AWS::S3::BucketPolicy
+    #  Properties:
 
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
