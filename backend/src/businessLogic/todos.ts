@@ -15,11 +15,6 @@ export async function getAllTodos(): Promise<TodoItem[]> {
   return itemAccess.getAllTodos()
 }
 
-export async function updateTodo(todoId: string, updatedTodo: UpdateTodoRequest): Promise<TodoItem>{
-  logger.info('Calling updateTodo from data layer: ', {updatedTodo: updatedTodo})
-  return itemAccess.updateTodo(todoId, updatedTodo)
-}
-
 export async function createTodo(
   createTodoRequest: CreateTodoRequest
 ): Promise<TodoItem> {
@@ -36,3 +31,29 @@ export async function createTodo(
     createdAt: new Date().toISOString()
   })
 }
+
+export async function updateTodo(todoId: string, updatedTodo: UpdateTodoRequest): Promise<TodoItem>{
+  logger.info('Calling updateTodo from data layer: ', updatedTodo)
+  return itemAccess.updateTodo(todoId, updatedTodo)
+}
+
+export async function deleteTodo(todoId: string){
+  logger.info('Calling deleteTodo from data layer with todoId: ', todoId);
+  return itemAccess.deleteTodo(todoId);
+}
+
+export async function createAttachmentPresignedUrl(todoId: string): Promise<string> {
+  logger.info('Getting upload URL from data layer')
+  const url = await itemAccess.getUploadURL(todoId);
+
+  logger.info('Upload URL generated: ', url);
+
+  return url;
+}
+
+export async function updateUploadURL(todoId: string): Promise<TodoItem> {
+  logger.info('Uploading image to S3')
+  return await itemAccess.updateUploadURL(todoId);
+}
+
+

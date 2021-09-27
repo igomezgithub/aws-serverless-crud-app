@@ -6,8 +6,13 @@ import { TodoItem } from '../models/TodoItem'
 import { createLogger } from '../utils/logger';
 
 // const XAWS = AWSXRay.captureAWS(AWS)
+const s3 = new AWS.S3({
+  signatureVersion: 'v4'
+})
 
 const logger = createLogger('itemAccess')
+const bucketName = process.env.ATTACHMENT_S3_BUCKET
+const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 
 export class ItemAccess {
 
@@ -80,6 +85,51 @@ export class ItemAccess {
         return undefined
       }
     }
+  }
+
+  async deleteTodo(todoId: string) {
+    logger.info('Deleting todo item: ' + todoId)
+
+    try{
+      await this.docClient.delete({
+        TableName: this.todosTable,
+        Key: {
+          todoId: todoId
+        }
+      }).promise()
+    }catch(e){
+      logger.info('Could not delete item: ', {error: e.message})
+    }
+  }
+
+  async getUploadURL(imageId: string): Promise<string>{
+    return s3.getSignedUrl('putObject', {
+      Bucket: bucketName,
+      Key: imageId,
+      Expires: parseInt(urlExpiration)
+    })
+  }
+
+  async updateUploadURL(todoId: string): Promise<TodoItem>{
+    const attachmentUrl = `https://${bucketName}.s3.amazonaws.com/${todoId}`
+    logger.info('Attachment URL created: ', attachmentUrl);
+
+    logger.info('Updating todo attachment URL')
+    const result = await this.docClient.update({
+      TableName: this.todosTable,
+      Key: {
+        todoId: todoId
+      },
+      ExpressionAttributeValues: {
+        ':attachmentUrl': attachmentUrl
+      },
+      UpdateExpression: 'SET attachmentUrl = :attachmentUrl',
+      ReturnValues: 'UPDATED_NEW'
+    }).promise()
+
+    logger.info('URL attached: ', result.Attributes);
+
+    return result.Attributes as TodoItem;
   }
 }
 
