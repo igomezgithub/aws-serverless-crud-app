@@ -11,8 +11,8 @@ const itemAccess = new ItemAccess()
 
 const logger = createLogger('todos')
 
-export async function getAllTodos(): Promise<TodoItem[]> {
-  return itemAccess.getAllTodos()
+export async function getAllTodos(userId: string): Promise<TodoItem[]> {
+  return itemAccess.getAllTodos(userId)
 }
 
 export async function createTodo(
