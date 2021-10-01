@@ -16,15 +16,15 @@ export async function getAllTodos(userId: string): Promise<TodoItem[]> {
 }
 
 export async function createTodo(
-  createTodoRequest: CreateTodoRequest
+  createTodoRequest: CreateTodoRequest,
+  userId: string
 ): Promise<TodoItem> {
 
   const itemId = uuid.v4()
-  // const userId = parseUserId(jwtToken)
 
   return await itemAccess.createTodo({
     todoId: itemId,
-    userId: '',
+    userId: userId,
     name: createTodoRequest.name,
     dueDate: createTodoRequest.dueDate,
     done: true,

@@ -12,10 +12,10 @@ const logger = createLogger('auth')
 
 // TODO: Get all TODO items for a current user
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Caller event', event)
+  logger.info('Caller event', { Event: event })
   const userId = getUserId(event)
 
-  logger.error('The userId is', { userId: userId })
+  logger.info('The userId is', { userId: userId })
 
   if (!userId) {
     return {
@@ -31,7 +31,7 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
 
   const todos = await getAllTodos(userId)
 
-  logger.error('Print all Todos', { Todos: todos })
+  logger.info('Print all Todos', { Todos: todos })
 
   return {
     statusCode: 201,

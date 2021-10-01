@@ -4,20 +4,32 @@ import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { createTodo } from '../../businessLogic/todos'
+import { getUserId } from '../utils';
+import { createLogger } from '../../utils/logger'
+
+const logger = createLogger('auth')
 
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log('Caller event', event)
+    logger.info('Caller event', { Event: event })
     const newTodo: CreateTodoRequest = JSON.parse(event.body)
     // TODO: Implement creating a new TODO item
+    const userId = getUserId(event)
 
-    const newItem = await createTodo(newTodo)
+    logger.info('The userId is', { userId: userId })
 
+    if (!userId) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({
+          error: 'User is not authorized'
+        })
+      }
+    }
+
+    const newItem = await createTodo(newTodo, userId)
 
     return {
       statusCode: 201,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-      },
       body: JSON.stringify({
         newItem
       })
@@ -26,6 +38,6 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
 
 handler.use(
   cors({
-    credentials: false
+    credentials: true
   })
 )

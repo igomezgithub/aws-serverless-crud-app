@@ -61,6 +61,17 @@ custom:
     stages:
       - dev  
 
+documentation:
+  api:
+    info:
+      version: v1.0.0
+      title: Udagram API
+      description: Serverless application for Todo organization
+  models:
+    - name: CreateTodoRequest
+      contentType: application/json
+      schema: ${file(models/create-todo-model.json)}
+
 functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
@@ -92,11 +103,10 @@ functions:
           method: post
           path: todos
           cors: true
-          # authorizer: Auth
-          request:
-            schema:
-              application/json: ${file(models/create-todo-model.json)}
-
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          requestModels:
+            'application/json': CreateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action:
