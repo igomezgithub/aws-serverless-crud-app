@@ -16,11 +16,10 @@ provider:
 
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-2'}
-  # stage: 'dev'
-  # region: 'us-east-2'
   apiGateway:
     shouldStartNameWithService: true
 
+  # Enabling X-Ray tracing 
   tracing:
     lambda: true
     apiGateway: true
