@@ -49,15 +49,19 @@ export class ItemAccess {
     return todoItem
   }
 
-  async updateTodo(todoId: string, updatedTodo: UpdateTodoRequest): Promise<TodoItem>{
+  async updateTodo(
+    todoId: string,
+    updatedTodo: UpdateTodoRequest,
+    userId: string
+  ): Promise<TodoItem>{
     logger.info("Updating todo Item: ", todoId)
     const result = await this.docClient.query({
         TableName: this.todosTable,
-        KeyConditionExpression: 'todoId = :todoId',
+        KeyConditionExpression: 'todoId = :todoId AND userId = :userId',
         ExpressionAttributeValues: {
-            ':todoId': todoId
-        },
-        ScanIndexForward: false
+            ':todoId': todoId,
+            ':userId': userId,
+        }
     }).promise()
     
     logger.info("Todo Item to update: ", result.Items)
@@ -68,7 +72,8 @@ export class ItemAccess {
       const result = await this.docClient.update({
         TableName: this.todosTable,
         Key: {
-          todoId: todoId
+          todoId: todoId,
+          userId: userId
         },
         ExpressionAttributeNames:{
           '#todoName': 'name'
@@ -95,14 +100,15 @@ export class ItemAccess {
     }
   }
 
-  async deleteTodo(todoId: string) {
+  async deleteTodo(todoId: string, userId: string) {
     logger.info('Deleting todo item: ' + todoId)
 
     try{
       await this.docClient.delete({
         TableName: this.todosTable,
         Key: {
-          todoId: todoId
+          todoId: todoId,
+          userId: userId
         }
       }).promise()
     }catch(e){
@@ -111,22 +117,29 @@ export class ItemAccess {
   }
 
   async getUploadURL(imageId: string): Promise<string>{
-    return s3.getSignedUrl('putObject', {
-      Bucket: bucketName,
-      Key: imageId,
-      Expires: parseInt(urlExpiration)
-    })
+    logger.info('Preview to save S3: ', {BucketName: bucketName});
+
+    try{
+      return s3.getSignedUrl('putObject', {
+        Bucket: bucketName,
+        Key: imageId,
+        Expires: parseInt(urlExpiration)
+      })
+    }catch(e){
+      logger.info('Error saving the image: ', {Error: e.message})
+    }
   }
 
-  async updateUploadURL(todoId: string): Promise<TodoItem>{
+  async updateUploadURL(todoId: string, userId: string): Promise<TodoItem>{
     const attachmentUrl = `https://${bucketName}.s3.amazonaws.com/${todoId}`
-    logger.info('Attachment URL created: ', attachmentUrl);
+    logger.info('Attachment URL created: ', {AttachmentUrl: attachmentUrl});
 
     logger.info('Updating todo attachment URL')
     const result = await this.docClient.update({
       TableName: this.todosTable,
       Key: {
-        todoId: todoId
+        todoId: todoId,
+        userId: userId
       },
       ExpressionAttributeValues: {
         ':attachmentUrl': attachmentUrl
@@ -135,7 +148,7 @@ export class ItemAccess {
       ReturnValues: 'UPDATED_NEW'
     }).promise()
 
-    logger.info('URL attached: ', result.Attributes);
+    logger.info('URL attached: ', {Attributes: result.Attributes});
 
     return result.Attributes as TodoItem;
   }

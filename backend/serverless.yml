@@ -30,8 +30,8 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    ATTACHMENT_S3_BUCKET: serverless-crud-app-todo-images-${self:provider.stage}
-    SIGNED_URL_EXPIRATION: 300
+    ATTACHMENT_S3_BUCKET: serverless-udagram-igomez-crud-app-todo-images-${self:provider.stage}
+    SIGNED_URL_EXPIRATION: 1000
 
   logs:
     # Enable API Gateway logs
@@ -71,6 +71,9 @@ documentation:
     - name: CreateTodoRequest
       contentType: application/json
       schema: ${file(models/create-todo-model.json)}
+    - name: UpdateTodoRequest
+      contentType: application/json
+      schema: ${file(models/update-todo-model.json)}
 
 functions:
   Auth:
@@ -121,13 +124,12 @@ functions:
     events:
       - http:
           method: patch
-          # authorizer: RS256Auth
+          authorizer: Auth
           path: todos/{todoId}
           cors: true
-          # reqValidatorName: RequestBodyValidator
-          request:
-            schema:
-              application/json: ${file(models/update-todo-model.json)}
+          reqValidatorName: RequestBodyValidator
+          requestModels:
+            'application/json': UpdateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -143,7 +145,7 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
-          # authorizer: Auth
+          authorizer: Auth
           cors: true
     iamRoleStatements:
       - Effect: Allow
@@ -159,7 +161,7 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
-          # authorizer: Auth
+          authorizer: Auth
           cors: true
     iamRoleStatements:
       - Effect: Allow
@@ -236,7 +238,7 @@ resources:
           Id: MyPolicy
           Version: "2012-10-17"
           Statement:
-            - Sid: PublicReadForGetBucketObjects
+            - Sid: PublicReadWriteBucketPolicy
               Effect: Allow
               Principal: '*'
               Action: 
